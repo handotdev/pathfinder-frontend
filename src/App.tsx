@@ -150,7 +150,7 @@ function App() {
           <span>
             Made with love.{' '}
             <a
-              href="https://tailwindcss.com/"
+              href="https://twitter.com/HanYeeWang"
               target="_new"
               className="text-teal-600 font-semibold logo"
             >
