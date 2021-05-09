@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import Skeleton from 'react-loading-skeleton';
 import highlightWords from 'highlight-words';
+import { isSetAccessor } from 'typescript';
 
 type CourseResult = {
   subject: string;
@@ -119,6 +120,11 @@ function App() {
               </div>
             </div>
           )}
+          {searchQuery !== '' &&
+            isLoading === false &&
+            courseResults.length === 0 && (
+              <p className="mt-2 text-gray-700 text-center">No results found</p>
+            )}
         </div>
 
         <footer className="p-5 text-sm text-gray-600 text-center inline-flex items-center">
