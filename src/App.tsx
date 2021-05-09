@@ -1,4 +1,6 @@
-import React from 'react';
+import { useState } from 'react';
+import axios from 'axios';
+import Skeleton from 'react-loading-skeleton';
 
 type CourseResult = {
   subject: string;
@@ -14,22 +16,28 @@ type CourseResult = {
 };
 
 function App() {
-  const courseResults: CourseResult[] = [
-    {
-      subject: 'CS',
-      catalogNbr: 2110,
-      title: 'Object-Oriented Programming and Data Structures',
-      description:
-        'Intermediate programming in a high-level language and introduction to computer science. Topics include object-oriented programming (classes, objects, subclasses, types), graphical user interfaces, algorithm analysis (asymptotic complexity, big "O" notation), recursion, testing, program correctness (loop invariants), searching/sorting, data structures (lists, trees, stacks, queues, heaps, search trees, hash tables, graphs), graph algorithms. Java is the principal programming language.',
-      credits: '3',
-      offered: 'Fall, Spring, Summer',
-      requisites:
-        'Prerequisite: CS 1110 or CS 1112 or equivalent course on programming in a procedural language.      ',
-      distribution: '(MQR-AS, SMR-AS)',
-      instructors: 'David Gries',
-      grading: 'Letter or S/U grades (OPT)',
-    },
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [courseResults, setCourseResults] = useState<CourseResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleKeyDown = async (event: any) => {
+    if (event.key === 'Enter') {
+      setIsLoading(true);
+
+      const queryResponse = (await axios.post(
+        'http://localhost:5000/api/search',
+        {
+          query: searchQuery,
+        }
+      )) as any;
+
+      if (queryResponse.data.success === true) {
+        setCourseResults(queryResponse.data.results);
+      }
+
+      return setIsLoading(false);
+    }
+  };
 
   return (
     <div className="main">
@@ -51,9 +59,9 @@ function App() {
                   <svg
                     className=" w-5 text-gray-600 h-5 cursor-pointer"
                     fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -67,6 +75,8 @@ function App() {
                   placeholder="3 credit programming course taught by Gries that fulfills MRQ requirement"
                   x-model="q"
                   className="w-full pl-4 text-sm outline-none focus:outline-none bg-transparent"
+                  onKeyDown={handleKeyDown}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <div className="select">
                   <select
@@ -83,48 +93,24 @@ function App() {
               </div>
             </div>
           </div>
-          {courseResults.map((course) => (
+          {isLoading === false ? (
+            courseResults.map((course) => <CourseCard course={course} />)
+          ) : (
             <div className="mt-4">
               <div className="w-full lg:max-w-full lg:flex">
                 <div className="w-full border shadow-md bg-white rounded-md p-4 flex flex-col justify-between leading-normal">
                   <div className="mb-8">
                     <div className="text-gray-900 font-bold text-xl mb-2 title cursor-pointer">
-                      {course.subject} {course.catalogNbr}: {course.title}
+                      <Skeleton />
                     </div>
                     <p className="text-gray-700 text-base">
-                      {course.description}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm leading-tight">
-                    <p className="text-gray-900">
-                      <span className="font-bold">Co/Prerequisites:</span>{' '}
-                      {course.requisites}
-                    </p>
-                    <p className="text-gray-900">
-                      <span className="font-bold">Credits:</span>{' '}
-                      {course.credits}
-                    </p>
-                    <p className="text-gray-900">
-                      <span className="font-bold">Offered In:</span>{' '}
-                      {course.offered}
-                    </p>
-                    <p className="text-gray-900">
-                      <span className="font-bold">Distribution:</span>{' '}
-                      {course.distribution}
-                    </p>
-                    <p className="text-gray-900">
-                      <span className="font-bold">Instructors:</span>{' '}
-                      {course.instructors}
-                    </p>
-                    <p className="text-gray-900">
-                      <span className="font-bold">Grading:</span>{' '}
-                      {course.grading}
+                      <Skeleton />
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         <footer className="p-5 text-sm text-gray-600 text-center inline-flex items-center">
@@ -158,5 +144,45 @@ function App() {
     </div>
   );
 }
+
+const CourseCard = ({ course }: { course: CourseResult }) => {
+  return (
+    <div className="mt-4">
+      <div className="w-full lg:max-w-full lg:flex">
+        <div className="w-full border shadow-md bg-white rounded-md p-4 flex flex-col justify-between leading-normal">
+          <div className="mb-8">
+            <div className="text-gray-900 font-bold text-xl mb-2 title cursor-pointer">
+              {course.subject} {course.catalogNbr}: {course.title}
+            </div>
+            <p className="text-gray-700 text-base">{course.description}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm leading-tight">
+            <p className="text-gray-900">
+              <span className="font-bold">Co/Prerequisites:</span>{' '}
+              {course.requisites}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-bold">Credits:</span> {course.credits}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-bold">Offered In:</span> {course.offered}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-bold">Distribution:</span>{' '}
+              {course.distribution}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-bold">Instructors:</span>{' '}
+              {course.instructors}
+            </p>
+            <p className="text-gray-900">
+              <span className="font-bold">Grading:</span> {course.grading}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default App;
