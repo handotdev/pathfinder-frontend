@@ -17,6 +17,11 @@ type CourseResult = {
   acadGroup: string;
 };
 
+const IS_DEV = false;
+const BACKEND_ENDPOINT = IS_DEV
+  ? 'http://localhost:5000'
+  : 'https://cupathfinder-backend.herokuapp.com';
+
 function App() {
   const [searchInput, setSearchInput] = useState('');
   const [courseResults, setCourseResults] = useState<CourseResult[]>([]);
@@ -28,7 +33,7 @@ function App() {
       setIsLoading(true);
 
       const queryResponse = (await axios.post(
-        'http://localhost:5000/api/search',
+        `${BACKEND_ENDPOINT}/api/search`,
         {
           query: searchInput,
         }
