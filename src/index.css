@@ -8,8 +8,6 @@
   -webkit-text-fill-color: transparent;
 }
 
-.title:hover {
-  background: linear-gradient(253.59deg, #e4271f 34.91%, #f28a29 84.81%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.title {
+  color: #e4271f;
 }

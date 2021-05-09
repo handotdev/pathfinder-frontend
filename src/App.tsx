@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import Skeleton from 'react-loading-skeleton';
+import highlightWords from 'highlight-words';
 
 type CourseResult = {
   subject: string;
@@ -13,12 +14,14 @@ type CourseResult = {
   distribution: string;
   instructors: string;
   grading: string;
+  acadGroup: string;
 };
 
 function App() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [courseResults, setCourseResults] = useState<CourseResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleKeyDown = async (event: any) => {
     if (event.key === 'Enter') {
@@ -27,12 +30,15 @@ function App() {
       const queryResponse = (await axios.post(
         'http://localhost:5000/api/search',
         {
-          query: searchQuery,
+          query: searchInput,
         }
       )) as any;
 
       if (queryResponse.data.success === true) {
         setCourseResults(queryResponse.data.results);
+        setSearchQuery(searchInput);
+      } else {
+        alert(queryResponse.data.error);
       }
 
       return setIsLoading(false);
@@ -76,7 +82,7 @@ function App() {
                   x-model="q"
                   className="w-full pl-4 text-sm outline-none focus:outline-none bg-transparent"
                   onKeyDown={handleKeyDown}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <div className="select">
                   <select
@@ -94,7 +100,9 @@ function App() {
             </div>
           </div>
           {isLoading === false ? (
-            courseResults.map((course) => <CourseCard course={course} />)
+            courseResults.map((course) => (
+              <CourseCard course={course} searchQuery={searchQuery} />
+            ))
           ) : (
             <div className="mt-4">
               <div className="w-full lg:max-w-full lg:flex">
@@ -145,38 +153,85 @@ function App() {
   );
 }
 
-const CourseCard = ({ course }: { course: CourseResult }) => {
+const CourseCard = ({
+  course,
+  searchQuery,
+}: {
+  course: CourseResult;
+  searchQuery: string;
+}) => {
+  const underlineQuery = (text: string) => {
+    if (text == null || searchQuery == null) return null;
+    const chunks = highlightWords({
+      text: text,
+      query: searchQuery,
+    });
+    return chunks.map(({ text, match, key }: any) =>
+      match ? (
+        <span className="font-bold" key={key}>
+          {text}
+        </span>
+      ) : (
+        <span key={key}>{text}</span>
+      )
+    );
+  };
+
   return (
     <div className="mt-4">
       <div className="w-full lg:max-w-full lg:flex">
         <div className="w-full border shadow-md bg-white rounded-md p-4 flex flex-col justify-between leading-normal">
           <div className="mb-8">
-            <div className="text-gray-900 font-bold text-xl mb-2 title cursor-pointer">
-              {course.subject} {course.catalogNbr}: {course.title}
-            </div>
-            <p className="text-gray-700 text-base">{course.description}</p>
+            <a
+              className="text-gray-900 font-medium text-xl mb-2 title cursor-pointer hover:underline"
+              href={`https://classes.cornell.edu/browse/roster/FA21/class/${course.subject}/${course.catalogNbr}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {underlineQuery(
+                `${course.subject} ${course.catalogNbr}: ${course.title}`
+              )}
+            </a>
+            <p className="text-gray-700 text-base">
+              {underlineQuery(course.description)}
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm leading-tight">
+            {course.requisites !== '' && (
+              <p className="text-gray-900">
+                <span className="font-bold">Co/Prerequisites:</span>{' '}
+                {underlineQuery(course.requisites)}
+              </p>
+            )}
             <p className="text-gray-900">
-              <span className="font-bold">Co/Prerequisites:</span>{' '}
-              {course.requisites}
+              <span className="font-bold">Credits:</span>{' '}
+              {underlineQuery(course.credits)}
             </p>
             <p className="text-gray-900">
-              <span className="font-bold">Credits:</span> {course.credits}
+              <span className="font-bold">Offered In:</span>{' '}
+              {underlineQuery(course.offered)}
             </p>
+            {course.distribution !== '' && (
+              <p className="text-gray-900">
+                <span className="font-bold">Distribution:</span>{' '}
+                {underlineQuery(course.distribution)}
+              </p>
+            )}
+            {course.acadGroup !== '' && (
+              <p className="text-gray-900">
+                <span className="font-bold">Acad Group:</span>{' '}
+                {underlineQuery(course.acadGroup)}
+              </p>
+            )}
+            {course.instructors !== '' && (
+              <p className="text-gray-900">
+                <span className="font-bold">Instructors:</span>{' '}
+                {underlineQuery(course.instructors)}
+              </p>
+            )}
             <p className="text-gray-900">
-              <span className="font-bold">Offered In:</span> {course.offered}
-            </p>
-            <p className="text-gray-900">
-              <span className="font-bold">Distribution:</span>{' '}
-              {course.distribution}
-            </p>
-            <p className="text-gray-900">
-              <span className="font-bold">Instructors:</span>{' '}
-              {course.instructors}
-            </p>
-            <p className="text-gray-900">
-              <span className="font-bold">Grading:</span> {course.grading}
+              <span className="font-bold">Grading:</span>{' '}
+              {underlineQuery(course.grading)}
             </p>
           </div>
         </div>
