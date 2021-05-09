@@ -2,7 +2,6 @@ import { useState } from 'react';
 import axios from 'axios';
 import Skeleton from 'react-loading-skeleton';
 import highlightWords from 'highlight-words';
-import { isSetAccessor } from 'typescript';
 
 type CourseResult = {
   subject: string;
